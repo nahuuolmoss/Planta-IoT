@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Monitor de Humedad del Suelo</title>
+    <title>Cloud Dashboard - Monitor de Humedad del Suelo</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         * {
             margin: 0;
@@ -12,7 +14,7 @@
         }
 
         :root {
-            --primary: #15803d; /* Verde planta */
+            --primary: #15803d; 
             --primary-light: #22c55e;
             --primary-dark: #166534;
             --secondary: #eab308;
@@ -73,10 +75,6 @@
             animation: fadeInUp 0.6s ease-out backwards;
         }
 
-        .card:nth-child(1) { animation-delay: 0.1s; }
-        .card:nth-child(2) { animation-delay: 0.2s; }
-        .card:nth-child(3) { animation-delay: 0.3s; }
-
         .card:hover {
             transform: translateY(-8px);
             box-shadow: 0 30px 80px rgba(0, 0, 0, 0.2);
@@ -122,15 +120,6 @@
             border-bottom: 1px solid var(--border);
         }
 
-        .status-item:last-child {
-            border-bottom: none;
-        }
-
-        .status-label {
-            color: var(--text-muted);
-            font-weight: 500;
-        }
-
         .status-value {
             font-weight: 700;
             color: var(--text);
@@ -160,7 +149,6 @@
             font-size: 0.85em;
             color: var(--text-muted);
             text-transform: uppercase;
-            letter-spacing: 0.5px;
             margin-bottom: 5px;
         }
 
@@ -198,45 +186,24 @@
             animation: pulse 2s ease-in-out infinite;
         }
 
-        .status-indicator.connected .status-dot {
-            background: var(--success);
-        }
-
-        .status-indicator.disconnected .status-dot {
-            background: var(--danger);
-        }
-
-        .status-text {
-            font-weight: 600;
-        }
-
-        .status-indicator.connected .status-text {
-            color: var(--success);
-        }
-
-        .status-indicator.disconnected .status-text {
-            color: var(--danger);
-        }
+        .status-indicator.connected .status-dot { background: var(--success); }
+        .status-indicator.disconnected .status-dot { background: var(--danger); }
+        .status-text { font-weight: 600; }
+        .status-indicator.connected .status-text { color: var(--success); }
+        .status-indicator.disconnected .status-text { color: var(--danger); }
 
         .chart-section {
             background: white;
             border-radius: 16px;
             padding: 30px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-            animation: fadeInUp 0.6s ease-out 0.5s backwards;
-        }
-
-        .chart-section h2 {
-            color: var(--primary);
-            margin-bottom: 20px;
-            font-size: 1.4em;
         }
 
         .signal-bar {
             display: flex;
             align-items: flex-end;
             justify-content: space-around;
-            height: 150px;
+            height: 120px;
             padding: 20px;
             background: var(--light);
             border-radius: 8px;
@@ -250,56 +217,10 @@
             transition: height 0.3s ease;
         }
 
-        .error {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--danger);
-            padding: 15px;
-            border-radius: 8px;
-            border-left: 4px solid var(--danger);
-            margin-bottom: 20px;
-            display: none;
-        }
-
-        .error.show {
-            display: block;
-        }
-
-        .refresh-btn {
-            background: linear-gradient(135deg, var(--primary), var(--primary-light));
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            box-shadow: 0 4px 15px rgba(21, 128, 61, 0.3);
-        }
-
-        .refresh-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(21, 128, 61, 0.4);
-        }
-
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
         footer {
             text-align: center;
@@ -307,96 +228,71 @@
             margin-top: 40px;
             opacity: 0.8;
             font-size: 0.9em;
-            animation: fadeInUp 0.6s ease-out 0.6s backwards;
-        }
-
-        @media (max-width: 768px) {
-            header h1 { font-size: 1.8em; }
-            .info-grid { grid-template-columns: 1fr; }
-            .sensor-value { font-size: 2.5em; }
-            .grid { grid-template-columns: 1fr; gap: 15px; }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>🌱 Monitor de Planta IoT</h1>
-            <p>Humedad del Suelo en Tiempo Real (ESP8266)</p>
+            <h1>☁️ Monitor de Planta Cloud (24/7)</h1>
+            <p>Datos en tiempo real vía Firebase Realtime Database</p>
         </header>
 
-        <div class="error" id="error"></div>
-
         <div class="grid">
-            <div class="card sensor-card" style="grid-column: span 1;">
+            <div class="card sensor-card">
                 <div class="sensor-icon">🌿</div>
                 <div class="sensor-label">Humedad del Suelo</div>
                 <div>
                     <span class="sensor-value" id="humidity">--</span>
                     <span class="sensor-unit">%</span>
                 </div>
-                <p id="soilStatus" style="margin-top: 10px; font-weight: 600; color: var(--text-muted);">Cargando estado...</p>
+                <p id="soilStatus" style="margin-top: 10px; font-weight: 600; color: var(--text-muted);">Conectando con la nube...</p>
             </div>
 
             <div class="card sensor-card" style="border-left-color: var(--secondary);">
                 <div class="sensor-icon" id="batteryIcon">🔋</div>
                 <div class="sensor-label">Fuente de Energía</div>
-                <div class="sensor-value" id="batteryStatus" style="font-size: 1.6em; padding-top: 15px; font-weight: 700; color: var(--text);">Cargando estado...</div>
+                <div class="sensor-value" id="batteryStatus" style="font-size: 1.6em; padding-top: 15px; font-weight: 700;">Cargando...</div>
                 <div class="sensor-unit" style="margin-top: 10px;">MCP73871</div>
             </div>
 
             <div class="card device-card">
-                <h3>📱 Información del Dispositivo</h3>
+                <h3>📱 Información de Red</h3>
                 <div class="status-item">
                     <span class="status-label">Dirección IP:</span>
                     <span class="status-value" id="deviceIP">--</span>
                 </div>
                 <div class="status-item">
-                    <span class="status-label">SSID:</span>
+                    <span class="status-label">SSID Conectado:</span>
                     <span class="status-value" id="deviceSSID">--</span>
                 </div>
                 <div class="status-item">
                     <span class="status-label">Señal WiFi:</span>
                     <span class="status-value" id="deviceSignal">-- dBm</span>
                 </div>
-                <div class="status-item">
-                    <span class="status-label">MAC:</span>
-                    <span class="status-value" id="deviceMAC">--</span>
-                </div>
             </div>
         </div>
 
         <div class="chart-section">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h2>📊 Información Detallada</h2>
-                <button class="refresh-btn" onclick="manualRefresh()">🔄 Actualizar</button>
-            </div>
-
-            <div class="status-indicator" id="connectionStatus2">
+            <h2>📊 Estado del Enlace IoT</h2>
+            <br>
+            <div class="status-indicator disconnected" id="connectionStatus2">
                 <div class="status-dot"></div>
-                <span class="status-text">Conectado a la red</span>
+                <span class="status-text" id="statusCloudText">Buscando Dispositivo...</span>
             </div>
 
             <div class="info-grid">
-                <div class="info-item">
-                    <div class="info-label">Puerta de Enlace</div>
-                    <div class="info-value" id="deviceGateway">--</div>
-                </div>
                 <div class="info-item">
                     <div class="info-label">Canal WiFi</div>
                     <div class="info-value" id="deviceChannel">--</div>
                 </div>
                 <div class="info-item">
-                    <div class="info-label">Tipo de Dispositivo</div>
-                    <div class="info-value" id="deviceType">--</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Tiempo Encendido</div>
+                    <div class="info-label">Tiempo de Actividad</div>
                     <div class="info-value" id="deviceUptime">--</div>
                 </div>
             </div>
 
-            <h3 style="color: var(--primary); margin-top: 30px; margin-bottom: 15px;">📶 Fuerza de Señal WiFi</h3>
+            <h3 style="color: var(--primary); margin-top: 30px; margin-bottom: 15px;">📶 Intensidad de Señal</h3>
             <div class="signal-bar">
                 <div class="bar" style="height: 20%;"></div>
                 <div class="bar" style="height: 40%;"></div>
@@ -404,67 +300,55 @@
                 <div class="bar" style="height: 80%;"></div>
                 <div class="bar" id="signalBar" style="height: 100%;"></div>
             </div>
-            <p style="text-align: center; color: var(--text-muted); margin-top: 10px; font-size: 0.9em;">
-                <span id="signalText">Excelente</span> - <span id="signalValue">-30 dBm</span>
-            </p>
         </div>
 
         <footer>
-            <p>✨ Dashboard IoT - ESP8266 con Sensor Capacitivo v2.0 | Última actualización: <span id="lastUpdate">--</span></p>
+            <p>✨ Dashboard IoT en la Nube | Sincronizado: <span id="lastUpdate">--</span></p>
         </footer>
     </div>
 
     <script>
-        const API_SENSOR = '/api/sensor';
-        const API_DEVICE = '/api/device';
-        const UPDATE_INTERVAL = 2000; 
-        let updateTimer;
+        // ================= CONFIGURACIÓN DE TU COPIA DE FIREBASE =================
+        const firebaseConfig = {
+            databaseURL: "https://planta-iot-43aeb-default-rtdb.firebaseio.com/" // <--- PEGA TU URL DE FIREBASE AQUÍ
+        };
+        
+        // Inicializar la app en el navegador
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
 
-        async function fetchSensorData() {
-            try {
-                const response = await fetch(API_SENSOR);
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                
-                const data = await response.json();
+        // ESCUCHA EN TIEMPO REAL: Firebase nos avisa automáticamente ante cualquier cambio
+        database.ref('/planta').on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
                 updateUI(data);
-                clearError();
-                return true;
-            } catch (error) {
-                showError(`Error al obtener datos: ${error.message}`);
-                updateConnectionStatus(false);
-                return false;
             }
-        }
-
-        async function fetchDeviceInfo() {
-            try {
-                const response = await fetch(API_DEVICE);
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                
-                const data = await response.json();
-                updateDeviceInfo(data);
-                clearError();
-                return true;
-            } catch (error) {
-                showError(`Error al obtener info del dispositivo: ${error.message}`);
-                updateConnectionStatus(false);
-                return false;
-            }
-        }
+        });
 
         function updateUI(data) {
-            // Actualizar humedad
-            const hum = data.humidity;
-            document.getElementById('humidity').textContent = hum.toFixed(1);
-            document.getElementById('deviceIP').textContent = data.ip || '--';
+            // Humedad
+            if(data.humidity !== undefined) {
+                const hum = data.humidity;
+                document.getElementById('humidity').textContent = hum.toFixed(1);
+                
+                const statusLabel = document.getElementById('soilStatus');
+                if (hum < 30) {
+                    statusLabel.textContent = "🚨 ¡Seco! Necesita agua urgente.";
+                    statusLabel.style.color = "var(--danger)";
+                } else if (hum <= 70) {
+                    statusLabel.textContent = "👍 Humedad Óptima";
+                    statusLabel.style.color = "var(--primary-light)";
+                } else {
+                    statusLabel.textContent = "🌊 Suelo muy húmedo / Regado";
+                    statusLabel.style.color = "#0284c7";
+                }
+            }
             
-            // ACTUALIZACIÓN DE LA FUENTE DE ENERGÍA / BATERÍA
-            const batteryStatusEl = document.getElementById('batteryStatus');
-            const batteryIconEl = document.getElementById('batteryIcon');
-            
-            if (data.battery) {
+            // Energía / Batería
+            if(data.battery) {
+                const batteryStatusEl = document.getElementById('batteryStatus');
+                const batteryIconEl = document.getElementById('batteryIcon');
                 batteryStatusEl.textContent = data.battery;
-                // Si el JSON contiene el rayo, cambiamos el icono dinámicamente
                 if (data.battery.includes("⚡")) {
                     batteryIconEl.textContent = "⚡";
                     batteryStatusEl.style.color = "var(--secondary)";
@@ -474,70 +358,33 @@
                 }
             }
 
-            // Lógica visual del estado de la planta
-            const statusLabel = document.getElementById('soilStatus');
-            if (hum < 30) {
-                statusLabel.textContent = "🚨 ¡Seco! Necesita agua urgente.";
-                statusLabel.style.color = "var(--danger)";
-            } else if (hum <= 70) {
-                statusLabel.textContent = "👍 Humedad Óptima";
-                statusLabel.style.color = "var(--primary-light)";
-            } else {
-                statusLabel.textContent = "🌊 Suelo muy húmedo / Regado";
-                statusLabel.style.color = "#0284c7"; // Azul cielo
-            }
-
-            // Datos de red basándose en el JSON de respuesta
-            if (data.signal) {
-                document.getElementById('deviceSignal').textContent = data.signal + ' dBm';
-                updateSignalBar(data.signal);
-            }
-            
-            updateLastUpdate();
-            updateConnectionStatus(true);
-        }
-
-        function updateDeviceInfo(data) {
-            document.getElementById('deviceType').textContent = data.device || '--';
-            document.getElementById('deviceMAC').textContent = data.mac || '--';
-            document.getElementById('deviceGateway').textContent = data.gateway || '--';
+            // Datos de Red
+            document.getElementById('deviceIP').textContent = data.ip || '--';
             document.getElementById('deviceSSID').textContent = data.ssid || '--';
             document.getElementById('deviceChannel').textContent = data.channel ? `Canal ${data.channel}` : '--';
             document.getElementById('deviceUptime').textContent = formatUptime(data.uptime);
+            
+            if (data.signal !== undefined) {
+                document.getElementById('deviceSignal').textContent = data.signal + ' dBm';
+                updateSignalBar(data.signal);
+            }
+
+            // Cambiar indicador a Online ya que recibimos la ráfaga
+            const statusIndicator = document.getElementById('connectionStatus2');
+            statusIndicator.className = 'status-indicator connected';
+            document.getElementById('statusCloudText').textContent = "Planta en Línea Cloud";
+
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('es-ES');
         }
 
         function updateSignalBar(signal) {
-            if (!signal) return;
-            const dbm = signal;
             let percentage = 0;
-            let quality = 'Desconocida';
-
-            if (dbm <= -100) { percentage = 5; quality = 'Muy Débil'; }
-            else if (dbm <= -80) { percentage = 25; quality = 'Débil'; }
-            else if (dbm <= -70) { percentage = 50; quality = 'Regular'; }
-            else if (dbm <= -60) { percentage = 75; quality = 'Buena'; }
-            else { percentage = 100; quality = 'Excelente'; }
-
+            if (signal <= -100) percentage = 5;
+            else if (signal <= -80) percentage = 25;
+            else if (signal <= -70) percentage = 50;
+            else if (signal <= -60) percentage = 75;
+            else percentage = 100;
             document.getElementById('signalBar').style.height = percentage + '%';
-            document.getElementById('signalText').textContent = quality;
-            document.getElementById('signalValue').textContent = dbm + ' dBm';
-        }
-
-        function updateConnectionStatus(connected) {
-            const statusElement2 = document.getElementById('connectionStatus2');
-
-            if (connected) {
-                statusElement2.className = 'status-indicator connected';
-                statusElement2.innerHTML = '<div class="status-dot"></div><span class="status-text">Conectado a la red</span>';
-            } else {
-                statusElement2.className = 'status-indicator disconnected';
-                statusElement2.innerHTML = '<div class="status-dot"></div><span class="status-text">Desconectado</span>';
-            }
-        }
-
-        function updateLastUpdate() {
-            const now = new Date();
-            document.getElementById('lastUpdate').textContent = now.toLocaleTimeString('es-ES');
         }
 
         function formatUptime(ms) {
@@ -545,51 +392,10 @@
             const seconds = Math.floor(ms / 1000);
             const minutes = Math.floor(seconds / 60);
             const hours = Math.floor(minutes / 60);
-            const days = Math.floor(hours / 24);
-
-            if (days > 0) return `${days}d ${hours % 24}h`;
             if (hours > 0) return `${hours}h ${minutes % 60}m`;
             if (minutes > 0) return `${minutes}m ${seconds % 60}s`;
             return `${seconds}s`;
         }
-
-        function showError(message) {
-            const errorEl = document.getElementById('error');
-            errorEl.textContent = '⚠️ ' + message;
-            errorEl.classList.add('show');
-        }
-
-        function clearError() {
-            document.getElementById('error').classList.remove('show');
-        }
-
-        function manualRefresh() {
-            fetchSensorData();
-            fetchDeviceInfo();
-        }
-
-        function startAutoUpdate() {
-            fetchSensorData();
-            fetchDeviceInfo();
-            updateTimer = setInterval(() => {
-                fetchSensorData();
-                fetchDeviceInfo();
-            }, UPDATE_INTERVAL);
-        }
-
-        function stopAutoUpdate() {
-            clearInterval(updateTimer);
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            startAutoUpdate();
-        });
-
-        window.addEventListener('beforeunload', stopAutoUpdate);
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) stopAutoUpdate();
-            else startAutoUpdate();
-        });
     </script>
 </body>
 </html>
