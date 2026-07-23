@@ -7,26 +7,18 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
             --primary: #15803d; 
             --primary-light: #22c55e;
-            --primary-dark: #166534;
             --secondary: #eab308;
             --success: #22c55e;
             --danger: #ef4444;
-            --dark: #0f172a;
             --light: #f8fafc;
             --border: #e2e8f0;
             --text: #1e293b;
             --text-muted: #64748b;
         }
-
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #115e59 0%, #166534 100%);
@@ -34,201 +26,30 @@
             padding: 20px;
             color: var(--text);
         }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        header {
-            text-align: center;
-            color: white;
-            margin-bottom: 40px;
-            animation: slideDown 0.8s ease-out;
-        }
-
-        header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            font-weight: 700;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-        }
-
-        header p {
-            font-size: 1.1em;
-            opacity: 0.95;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 25px;
-            margin-bottom: 30px;
-        }
-
-        .card {
-            background: white;
-            border-radius: 16px;
-            padding: 30px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            animation: fadeInUp 0.6s ease-out backwards;
-        }
-
-        .card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.2);
-        }
-
-        .sensor-card {
-            text-align: center;
-            border-left: 5px solid var(--primary);
-        }
-
-        .sensor-icon {
-            font-size: 3em;
-            margin-bottom: 15px;
-            animation: float 3s ease-in-out infinite;
-        }
-
-        .sensor-label {
-            font-size: 0.95em;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 8px;
-            font-weight: 600;
-        }
-
-        .sensor-value {
-            font-size: 3.5em;
-            font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 8px;
-        }
-
-        .sensor-unit {
-            font-size: 1.2em;
-            color: var(--text-muted);
-        }
-
-        .status-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .status-value {
-            font-weight: 700;
-            color: var(--text);
-            font-family: 'Courier New', monospace;
-        }
-
-        .device-card h3 {
-            color: var(--primary);
-            margin-bottom: 20px;
-            font-size: 1.3em;
-        }
-
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-        }
-
-        .info-item {
-            background: var(--light);
-            padding: 15px;
-            border-radius: 8px;
-            border-left: 3px solid var(--primary);
-        }
-
-        .info-label {
-            font-size: 0.85em;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            margin-bottom: 5px;
-        }
-
-        .info-value {
-            font-weight: 700;
-            color: var(--text);
-            word-break: break-all;
-        }
-
-        .status-indicator {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 15px;
-            background: var(--light);
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border-left: 4px solid;
-        }
-
-        .status-indicator.connected {
-            border-left-color: var(--success);
-            background: rgba(34, 197, 94, 0.1);
-        }
-
-        .status-indicator.disconnected {
-            border-left-color: var(--danger);
-            background: rgba(239, 68, 68, 0.1);
-        }
-
-        .status-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            animation: pulse 2s ease-in-out infinite;
-        }
-
+        .container { max-width: 1200px; margin: 0 auto; }
+        header { text-align: center; color: white; margin-bottom: 40px; }
+        header h1 { font-size: 2.5em; margin-bottom: 10px; font-weight: 700; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-bottom: 30px; }
+        .card { background: white; border-radius: 16px; padding: 30px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15); }
+        .sensor-card { text-align: center; border-left: 5px solid var(--primary); }
+        .sensor-icon { font-size: 3em; margin-bottom: 15px; }
+        .sensor-label { font-size: 0.95em; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; font-weight: 600; }
+        .sensor-value { font-size: 3.5em; font-weight: 700; color: var(--primary); margin-bottom: 8px; }
+        .sensor-unit { font-size: 1.2em; color: var(--text-muted); }
+        .status-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
+        .status-value { font-weight: 700; color: var(--text); font-family: 'Courier New', monospace; }
+        .device-card h3 { color: var(--primary); margin-bottom: 20px; font-size: 1.3em; }
+        .status-indicator { display: flex; align-items: center; gap: 10px; padding: 15px; background: var(--light); border-radius: 8px; margin-bottom: 20px; border-left: 4px solid; }
+        .status-indicator.connected { border-left-color: var(--success); background: rgba(34, 197, 94, 0.1); }
+        .status-indicator.disconnected { border-left-color: var(--danger); background: rgba(239, 68, 68, 0.1); }
+        .status-dot { width: 12px; height: 12px; border-radius: 50%; }
         .status-indicator.connected .status-dot { background: var(--success); }
         .status-indicator.disconnected .status-dot { background: var(--danger); }
         .status-text { font-weight: 600; }
         .status-indicator.connected .status-text { color: var(--success); }
         .status-indicator.disconnected .status-text { color: var(--danger); }
-
-        .chart-section {
-            background: white;
-            border-radius: 16px;
-            padding: 30px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-        }
-
-        .signal-bar {
-            display: flex;
-            align-items: flex-end;
-            justify-content: space-around;
-            height: 120px;
-            padding: 20px;
-            background: var(--light);
-            border-radius: 8px;
-            margin-top: 10px;
-        }
-
-        .bar {
-            width: 8px;
-            background: linear-gradient(to top, var(--primary), var(--primary-light));
-            border-radius: 4px 4px 0 0;
-            transition: height 0.3s ease;
-        }
-
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-
-        footer {
-            text-align: center;
-            color: white;
-            margin-top: 40px;
-            opacity: 0.8;
-            font-size: 0.9em;
-        }
+        .chart-section { background: white; border-radius: 16px; padding: 30px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15); }
+        footer { text-align: center; color: white; margin-top: 40px; opacity: 0.8; font-size: 0.9em; }
     </style>
 </head>
 <body>
@@ -253,7 +74,7 @@
                 <div class="sensor-icon" id="batteryIcon">🔋</div>
                 <div class="sensor-label">Fuente de Energía</div>
                 <div class="sensor-value" id="batteryStatus" style="font-size: 1.6em; padding-top: 15px; font-weight: 700;">Cargando...</div>
-                <div class="sensor-unit" style="margin-top: 10px;">MCP73871</div>
+                <div class="sensor-unit" style="margin-top: 10px;">Estado ESP8266</div>
             </div>
 
             <div class="card device-card">
@@ -280,66 +101,37 @@
                 <div class="status-dot"></div>
                 <span class="status-text" id="statusCloudText">Buscando Dispositivo...</span>
             </div>
-
-            <div class="info-grid">
-                <div class="info-item">
-                    <div class="info-label">Canal WiFi</div>
-                    <div class="info-value" id="deviceChannel">--</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Tiempo de Actividad</div>
-                    <div class="info-value" id="deviceUptime">--</div>
-                </div>
-            </div>
-
-            <h3 style="color: var(--primary); margin-top: 30px; margin-bottom: 15px;">📶 Intensidad de Señal</h3>
-            <div class="signal-bar">
-                <div class="bar" style="height: 20%;"></div>
-                <div class="bar" style="height: 40%;"></div>
-                <div class="bar" style="height: 60%;"></div>
-                <div class="bar" style="height: 80%;"></div>
-                <div class="bar" id="signalBar" style="height: 100%;"></div>
-            </div>
         </div>
 
         <footer>
-            <p>✨ Dashboard IoT en la Nube | Sincronizado: <span id="lastUpdate">--</span></p>
+            <p>✨ Dashboard IoT en la Nube | Última Sincronización: <span id="lastUpdate">--</span></p>
         </footer>
     </div>
 
     <script>
-        // ================= CONFIGURACIÓN DE TU COPIA DE FIREBASE =================
+        // CONFIGURACIÓN DE FIREBASE
         const firebaseConfig = {
             databaseURL: "https://planta-iot-43aeb-default-rtdb.firebaseio.com/" 
         };
-
-        // Listener en la ruta interna .info/connected
-        const connectedRef = firebase.database().ref(".info/connected");
-        connectedRef.on("value", (snap) => {
-          if (snap.val() === true) {
-            console.log("🟢 Web conectada a los servidores de Firebase");
-            document.getElementById('statusCloudText').textContent = "Conectado a Firebase Cloud";
-          } else {
-            console.warn("🔴 Web desconectada de los servidores de Firebase");
-            document.getElementById('statusCloudText').textContent = "Desconectado de la Nube";
-          }
-        });
-        // Inicializar la app en el navegador
+        
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // ESCUCHA EN TIEMPO REAL: Firebase nos avisa automáticamente ante cualquier cambio
+        // ESCUCHA EN TIEMPO REAL A LA CARPETA /planta
         database.ref('/planta').on('value', (snapshot) => {
             const data = snapshot.val();
+            console.log("Datos recibidos de Firebase:", data); // Ver en F12
             if (data) {
                 updateUI(data);
             }
+        }, (error) => {
+            console.error("Error al leer de Firebase:", error);
         });
 
         function updateUI(data) {
             // Humedad
-            if(data.humidity !== undefined) {
-                const hum = data.humidity;
+            if (data.humidity !== undefined) {
+                const hum = Number(data.humidity);
                 document.getElementById('humidity').textContent = hum.toFixed(1);
                 
                 const statusLabel = document.getElementById('soilStatus');
@@ -355,8 +147,8 @@
                 }
             }
             
-            // Energía / Batería
-            if(data.battery) {
+            // Estado Batería / Alimentación
+            if (data.battery) {
                 const batteryStatusEl = document.getElementById('batteryStatus');
                 const batteryIconEl = document.getElementById('batteryIcon');
                 batteryStatusEl.textContent = data.battery;
@@ -372,40 +164,16 @@
             // Datos de Red
             document.getElementById('deviceIP').textContent = data.ip || '--';
             document.getElementById('deviceSSID').textContent = data.ssid || '--';
-            document.getElementById('deviceChannel').textContent = data.channel ? `Canal ${data.channel}` : '--';
-            document.getElementById('deviceUptime').textContent = formatUptime(data.uptime);
-            
             if (data.signal !== undefined) {
                 document.getElementById('deviceSignal').textContent = data.signal + ' dBm';
-                updateSignalBar(data.signal);
             }
 
-            // Cambiar indicador a Online ya que recibimos la ráfaga
+            // Actualizar indicador de estado en línea
             const statusIndicator = document.getElementById('connectionStatus2');
             statusIndicator.className = 'status-indicator connected';
-            document.getElementById('statusCloudText').textContent = "Planta en Línea Cloud";
+            document.getElementById('statusCloudText').textContent = "Planta en Línea (Conectada)";
 
             document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('es-ES');
-        }
-
-        function updateSignalBar(signal) {
-            let percentage = 0;
-            if (signal <= -100) percentage = 5;
-            else if (signal <= -80) percentage = 25;
-            else if (signal <= -70) percentage = 50;
-            else if (signal <= -60) percentage = 75;
-            else percentage = 100;
-            document.getElementById('signalBar').style.height = percentage + '%';
-        }
-
-        function formatUptime(ms) {
-            if (!ms) return '--';
-            const seconds = Math.floor(ms / 1000);
-            const minutes = Math.floor(seconds / 60);
-            const hours = Math.floor(minutes / 60);
-            if (hours > 0) return `${hours}h ${minutes % 60}m`;
-            if (minutes > 0) return `${minutes}m ${seconds % 60}s`;
-            return `${seconds}s`;
         }
     </script>
 </body>
