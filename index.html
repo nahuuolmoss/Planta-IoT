@@ -312,7 +312,18 @@
         const firebaseConfig = {
             databaseURL: "https://planta-iot-43aeb-default-rtdb.firebaseio.com/" 
         };
-        
+
+        // Listener en la ruta interna .info/connected
+        const connectedRef = firebase.database().ref(".info/connected");
+        connectedRef.on("value", (snap) => {
+          if (snap.val() === true) {
+            console.log("🟢 Web conectada a los servidores de Firebase");
+            document.getElementById('statusCloudText').textContent = "Conectado a Firebase Cloud";
+          } else {
+            console.warn("🔴 Web desconectada de los servidores de Firebase");
+            document.getElementById('statusCloudText').textContent = "Desconectado de la Nube";
+          }
+        });
         // Inicializar la app en el navegador
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
