@@ -278,7 +278,7 @@
             document.getElementById('plantDetails').textContent = "";
 
             const formData = new FormData();
-            formData.append('organs', 'leaf');
+            formData.append('organs', 'auto');
             formData.append('images', imageBlob);
 
             const url = `https://my-api.plantnet.org/v2/identify/all?api-key=${PLANTNET_API_KEY}`;
