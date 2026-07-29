@@ -94,6 +94,47 @@
             </div>
         </div>
 
+        <!-- ================= MÓDULO RECONOCIMIENTO DE PLANTA ================= -->
+        <div class="card" style="margin-top: 30px; border-left: 5px solid #0284c7;">
+            <h2>📸 Identificador de Planta por Cámara / Imagen</h2>
+            <p style="color: var(--text-muted); margin-bottom: 15px;">
+                Usá la cámara de tu notebook o subí una imagen para detectar qué planta es.
+            </p>
+
+            <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;">
+                <!-- Visor de la Cámara -->
+                <div style="text-align: center;">
+                    <video id="webcam" autoplay playsinline style="width: 100%; max-width: 320px; border-radius: 12px; border: 2px solid var(--border); background: #000;"></video>
+                    <canvas id="canvas" style="display: none;"></canvas>
+                    <div style="margin-top: 10px;">
+                        <button onclick="tomarFotoYDetectar()" style="padding: 10px 15px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">
+                            📷 Capturar desde Cámara
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Opción de Probar con Imagen local -->
+                <div style="text-align: center; border-left: 1px solid var(--border); padding-left: 20px;">
+                    <h3>O probá con un archivo:</h3>
+                    <br>
+                    <input type="file" id="imageInput" accept="image/*" style="display: none;" onchange="procesarImagenLocal(event)">
+                    <button onclick="document.getElementById('imageInput').click()" style="padding: 10px 15px; background: #0284c7; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">
+                        📁 Subir Imagen desde PC
+                    </button>
+                    <div style="margin-top: 15px;">
+                        <img id="previewImage" style="max-width: 200px; display: none; border-radius: 8px; margin: 0 auto;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resultado del Análisis -->
+            <div id="plantResult" style="margin-top: 20px; padding: 15px; background: var(--light); border-radius: 8px; display: none;">
+                <h3 id="plantName" style="color: var(--primary);">--</h3>
+                <p id="plantScore" style="color: var(--text-muted); font-size: 0.9em;"></p>
+                <p id="plantDetails" style="margin-top: 8px;"></p>
+            </div>
+        </div>
+
         <div class="chart-section">
             <h2>📊 Estado del Enlace IoT</h2>
             <br>
@@ -129,6 +170,89 @@
         });
 
         function updateUI(data) {
+            // Tu API Key de Pl@ntNet (reemplazá con la tuya)
+            const PLANTNET_API_KEY = "2b10CKDkoMd5gpD1OgpmmQVd"; 
+
+            // 1. Inicializar Cámara Web al cargar
+            async function initWebcam() {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    document.getElementById('webcam').srcObject = stream;
+                } catch (err) {
+                    console.warn("No se pudo acceder a la cámara web:", err);
+                }
+            }
+            window.addEventListener('load', initWebcam);
+
+            // 2. Capturar foto del Video de la Cámara
+            function tomarFotoYDetectar() {
+                const video = document.getElementById('webcam');
+                const canvas = document.getElementById('canvas');
+                canvas.width = video.videoWidth || 640;
+                canvas.height = video.videoHeight || 480;
+                
+                const context = canvas.getContext('2d');
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                canvas.toBlob((blob) => {
+                    enviarAPlantNet(blob);
+                }, 'image/jpeg');
+            }
+
+            // 3. Procesar Imagen Subida desde Archivo Local
+            function procesarImagenLocal(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const imgPreview = document.getElementById('previewImage');
+                    imgPreview.src = URL.createObjectURL(file);
+                    imgPreview.style.display = 'block';
+                    
+                    enviarAPlantNet(file);
+                }
+            }
+
+            // 4. Enviar Imagen a la API de Pl@ntNet
+            async function enviarAPlantNet(imageBlob) {
+                const resultDiv = document.getElementById('plantResult');
+                resultDiv.style.display = 'block';
+                document.getElementById('plantName').textContent = "🔍 Analizando planta...";
+                document.getElementById('plantScore').textContent = "";
+                document.getElementById('plantDetails').textContent = "";
+
+                const formData = new FormData();
+                formData.append('organs', 'leaf'); // Opciones: leaf, flower, fruit, bark
+                formData.append('images', imageBlob);
+
+                const url = `https://my-api.plantnet.org/v2/identify/all?api-key=${PLANTNET_API_KEY}`;
+
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const data = await response.json();
+
+                    if (data.results && data.results.length > 0) {
+                        const topResult = data.results[0];
+                        const nombreCientifico = topResult.species.scientificNameWithoutAuthor;
+                        const nombresComunes = topResult.species.commonNames ? topResult.species.commonNames.join(', ') : 'Sin nombre común registrado';
+                        const certeza = (topResult.score * 100).toFixed(1);
+
+                        document.getElementById('plantName').textContent = `🌱 ${nombresComunes} (${nombreCientifico})`;
+                        document.getElementById('plantScore').textContent = `Confianza de identificación: ${certeza}%`;
+                        document.getElementById('plantDetails').innerHTML = `<strong>Familia:</strong> ${topResult.species.family.scientificNameWithoutAuthor}`;
+                    } else {
+                        document.getElementById('plantName').textContent = "⚠️ No se pudo identificar la planta";
+                        document.getElementById('plantScore').textContent = "Intentá con una imagen más clara o mejor enfocada.";
+                    }
+                } catch (error) {
+                    console.error("Error al consultar la API:", error);
+                    document.getElementById('plantName').textContent = "❌ Error en la conexión";
+                    document.getElementById('plantScore').textContent = "Verificá la API Key o la conexión a internet.";
+                }
+            }
+
             // Humedad
             if (data.humidity !== undefined) {
                 const hum = Number(data.humidity);
