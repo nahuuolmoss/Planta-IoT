@@ -269,7 +269,7 @@
             }
         }
 
-        // 4. Enviar Imagen a la API de Pl@ntNet (Versión Ajustada para GitHub Pages)
+        // 4. Enviar Imagen a la API de Pl@ntNet
         async function enviarAPlantNet(imageBlob) {
             const resultDiv = document.getElementById('plantResult');
             resultDiv.style.display = 'block';
@@ -278,14 +278,13 @@
             document.getElementById('plantDetails').textContent = "";
         
             const formData = new FormData();
-            // Pl@ntNet exige mandar el órgano exacto asociado a la foto
-            formData.append('images', imageBlob);
-            formData.append('organs', 'auto'); 
+            // Requisito de la API: archivo en 'images' y tipo en 'organs'
+            formData.append('images', imageBlob, 'planta.jpg');
+            formData.append('organs', 'leaf'); 
         
-            // Endpoint con proyecto 'all' explícito y parámetros de lenguaje en español
             const apiKeyLimpia = PLANTNET_API_KEY.trim();
-            const targetUrl = `https://my-api.plantnet.org/v2/identify/all?api-key=${apiKeyLimpia}&lang=es`;
-            const url = `https://corsproxy.io/?` + encodeURIComponent(targetUrl);
+            // Endpoint directo a Pl@ntNet
+            const url = `https://my-api.plantnet.org/v2/identify/all?api-key=${apiKeyLimpia}&lang=es`;
         
             try {
                 const response = await fetch(url, {
@@ -293,10 +292,12 @@
                     body: formData
                 });
         
+                if (response.status === 403) {
+                    throw new Error("403_FORBIDDEN");
+                }
+        
                 if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    console.error("Detalle de respuesta de la API:", response.status, errorData);
-                    throw new Error(`HTTP_${response.status}`);
+                    throw new Error(`HTTP_ERROR_${response.status}`);
                 }
         
                 const data = await response.json();
@@ -314,17 +315,17 @@
                     document.getElementById('plantDetails').innerHTML = `<strong>Familia:</strong> ${topResult.species.family.scientificNameWithoutAuthor}`;
                 } else {
                     document.getElementById('plantName').textContent = "⚠️ No se pudo identificar la planta";
-                    document.getElementById('plantScore').textContent = "Intentá con una imagen donde la hoja o flor se vea más clara.";
+                    document.getElementById('plantScore').textContent = "Intentá con una imagen más clara de la hoja.";
                 }
             } catch (error) {
                 console.error("Error al consultar la API:", error);
                 
-                if (error.message.includes("403")) {
-                    document.getElementById('plantName').textContent = "❌ Error 403 (Clave / Proyecto)";
-                    document.getElementById('plantScore').textContent = "Revisá en la consola (F12) qué mensaje devuelve la API de Pl@ntNet.";
+                if (error.message === "403_FORBIDDEN") {
+                    document.getElementById('plantName').textContent = "❌ Error 403 (Pl@ntNet)";
+                    document.getElementById('plantScore').textContent = "Tu cuenta o API Key de Pl@ntNet fue bloqueada temporalmente o no tiene permisos de origen.";
                 } else {
-                    document.getElementById('plantName').textContent = "❌ Error al procesar la imagen";
-                    document.getElementById('plantScore').textContent = "Verificá la consola F12 para más detalles.";
+                    document.getElementById('plantName').textContent = "❌ Error en la solicitud";
+                    document.getElementById('plantScore').textContent = "Verificá la consola F12 para ver la respuesta detallada.";
                 }
             }
         }
