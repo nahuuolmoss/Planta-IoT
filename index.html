@@ -217,10 +217,58 @@
             document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('es-ES');
         }
 
-        // ================= LÓGICA RECONOCIMIENTO BOTÁNICO =================
-        // Constante para tu clave de Plant.id
+        // ================= LÓGICA RECONOCIMIENTO BOTÁNICO (PLANT.ID / KINDWISE) =================
         const PLANT_ID_API_KEY = "r6MGhn4aM8v9qvQSf9VIJ5wqAyjoALmuOjmOF6GWRNjQYEtQq8"; 
 
+        // 1. Inicializar Cámara Web
+        async function initWebcam() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                document.getElementById('webcam').srcObject = stream;
+            } catch (err) {
+                console.warn("No se pudo acceder a la cámara web:", err);
+            }
+        }
+        window.addEventListener('load', initWebcam);
+
+        // 2. Capturar foto desde la Cámara
+        function tomarFotoYDetectar() {
+            const video = document.getElementById('webcam');
+            const canvas = document.getElementById('canvas');
+            const imgPreview = document.getElementById('previewImage');
+
+            if (!video.srcObject) {
+                alert("Permití el acceso a la cámara o probá subiendo una imagen desde la PC.");
+                return;
+            }
+
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+            
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            imgPreview.src = canvas.toDataURL('image/jpeg');
+            imgPreview.style.display = 'block';
+
+            canvas.toBlob((blob) => {
+                if (blob) enviarAPlantNet(blob);
+            }, 'image/jpeg');
+        }
+
+        // 3. Subir imagen local desde PC
+        function procesarImagenLocal(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const imgPreview = document.getElementById('previewImage');
+                imgPreview.src = URL.createObjectURL(file);
+                imgPreview.style.display = 'block';
+                
+                enviarAPlantNet(file);
+            }
+        }
+
+        // 4. Enviar a la API de Plant.id
         async function enviarAPlantNet(imageBlob) {
             const resultDiv = document.getElementById('plantResult');
             resultDiv.style.display = 'block';
@@ -228,7 +276,6 @@
             document.getElementById('plantScore').textContent = "";
             document.getElementById('plantDetails').textContent = "";
 
-            // Convertir el Blob de la imagen a Base64 (requerido por Plant.id)
             const reader = new FileReader();
             reader.readAsDataURL(imageBlob);
             reader.onloadend = async function() {
@@ -236,8 +283,8 @@
 
                 const payload = {
                     images: [base64Image],
-                    latitude: 49.207,
-                    longitude: 16.608,
+                    latitude: -34.6037,
+                    longitude: -58.3816,
                     similar_images: true
                 };
 
@@ -272,7 +319,7 @@
                 } catch (error) {
                     console.error("Error Plant.id:", error);
                     document.getElementById('plantName').textContent = "❌ Error al analizar la imagen";
-                    document.getElementById('plantScore').textContent = "Verificá que la API Key de Plant.id sea correcta.";
+                    document.getElementById('plantScore').textContent = "Verificá la consola o que la API Key sea válida.";
                 }
             };
         }
