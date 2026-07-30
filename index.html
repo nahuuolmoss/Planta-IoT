@@ -3,153 +3,473 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cloud Dashboard - Monitor de Humedad del Suelo</title>
+    <title>Cloud Dashboard - Monitor IoT</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        
         :root {
-            --primary: #15803d; 
-            --primary-light: #22c55e;
-            --secondary: #eab308;
-            --success: #22c55e;
+            --bg-main: #0f1311;
+            --bg-card: #181d19;
+            --bg-pill: #232c26;
+            
+            --pastel-green: #82c496;
+            --pastel-green-light: #a3dba8;
+            --pastel-green-glow: rgba(130, 196, 150, 0.25);
+            --pastel-green-dark: #1e3827;
+            
+            --border: #28322a;
+            --text-primary: #f0f5f1;
+            --text-secondary: #8c9c90;
             --danger: #ef4444;
-            --light: #f8fafc;
-            --border: #e2e8f0;
-            --text: #1e293b;
-            --text-muted: #64748b;
         }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #115e59 0%, #166534 100%);
+            background-color: var(--bg-main);
+            color: var(--text-primary);
             min-height: 100vh;
-            padding: 20px;
-            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 30px 20px;
         }
-        .container { max-width: 1200px; margin: 0 auto; }
-        header { text-align: center; color: white; margin-bottom: 40px; }
-        header h1 { font-size: 2.5em; margin-bottom: 10px; font-weight: 700; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-bottom: 30px; }
-        .card { background: white; border-radius: 16px; padding: 30px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15); }
-        .sensor-card { text-align: center; border-left: 5px solid var(--primary); }
-        .sensor-icon { font-size: 3em; margin-bottom: 15px; }
-        .sensor-label { font-size: 0.95em; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; font-weight: 600; }
-        .sensor-value { font-size: 3.5em; font-weight: 700; color: var(--primary); margin-bottom: 8px; }
-        .sensor-unit { font-size: 1.2em; color: var(--text-muted); }
-        .status-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
-        .status-value { font-weight: 700; color: var(--text); font-family: 'Courier New', monospace; }
-        .device-card h3 { color: var(--primary); margin-bottom: 20px; font-size: 1.3em; }
-        .status-indicator { display: flex; align-items: center; gap: 10px; padding: 15px; background: var(--light); border-radius: 8px; margin-bottom: 20px; border-left: 4px solid; }
-        .status-indicator.connected { border-left-color: var(--success); background: rgba(34, 197, 94, 0.1); }
-        .status-indicator.disconnected { border-left-color: var(--danger); background: rgba(239, 68, 68, 0.1); }
-        .status-dot { width: 12px; height: 12px; border-radius: 50%; }
-        .status-indicator.connected .status-dot { background: var(--success); }
-        .status-indicator.disconnected .status-dot { background: var(--danger); }
-        .status-text { font-weight: 600; }
-        .status-indicator.connected .status-text { color: var(--success); }
-        .status-indicator.disconnected .status-text { color: var(--danger); }
-        .chart-section { background: white; border-radius: 16px; padding: 30px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15); }
-        footer { text-align: center; color: white; margin-top: 40px; opacity: 0.8; font-size: 0.9em; }
+
+        .dashboard-window {
+            background: #141815;
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            width: 100%;
+            max-width: 1250px;
+            padding: 30px;
+            box-shadow: 0 30px 100px rgba(0, 0, 0, 0.8), 0 0 80px rgba(130, 196, 150, 0.03);
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            gap: 30px;
+        }
+
+        sidebar {
+            border-right: 1px solid var(--border);
+            padding-right: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.2em;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 40px;
+        }
+
+        .brand-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--pastel-green);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000;
+            font-size: 1.1em;
+            box-shadow: 0 0 15px var(--pastel-green-glow);
+        }
+
+        .nav-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+        
+        .nav-item {
+            padding: 12px 16px;
+            border-radius: 16px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, var(--pastel-green-dark) 0%, rgba(130, 196, 150, 0.1) 100%);
+            color: var(--pastel-green);
+            border: 1px solid rgba(130, 196, 150, 0.3);
+            box-shadow: 0 4px 20px var(--pastel-green-glow);
+        }
+
+        .nav-item:hover:not(.active) {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .header-title h1 {
+            font-size: 1.8em;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .header-title p {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            margin-top: 4px;
+        }
+
+        .status-pill {
+            background: var(--bg-pill);
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .status-dot-active {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--pastel-green);
+            box-shadow: 0 0 10px var(--pastel-green);
+        }
+
+        /* Control de Pestañas */
+        .tab-content { display: none; }
+        .tab-content.active-tab { display: block; }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 24px;
+            transition: transform 0.2s, border 0.2s;
+        }
+
+        .card:hover {
+            border-color: rgba(130, 196, 150, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .card-label {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .card-value {
+            font-size: 2.8em;
+            font-weight: 800;
+            color: var(--pastel-green);
+            letter-spacing: -1px;
+            margin-bottom: 6px;
+            text-shadow: 0 0 20px var(--pastel-green-glow);
+        }
+
+        .card-sub {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+        }
+
+        /* Sección de IA y Cámara */
+        .ai-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 25px;
+        }
+
+        .ai-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .camera-box, .file-box {
+            background: var(--bg-pill);
+            border: 1px dashed var(--border);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        video {
+            width: 100%;
+            max-width: 260px;
+            height: 180px;
+            border-radius: 14px;
+            background: #000;
+            object-fit: cover;
+            border: 1px solid var(--border);
+            margin-bottom: 12px;
+        }
+
+        .btn-pastel {
+            background: var(--pastel-green);
+            color: #0d140e;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 14px;
+            font-weight: 700;
+            font-size: 0.9em;
+            cursor: pointer;
+            box-shadow: 0 4px 15px var(--pastel-green-glow);
+            transition: all 0.2s;
+        }
+
+        .btn-pastel:hover {
+            background: var(--pastel-green-light);
+            transform: scale(1.02);
+        }
+
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            padding: 10px 20px;
+            border-radius: 14px;
+            font-weight: 600;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        /* Formulario de Configuración */
+        .config-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            font-size: 0.9em;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .form-input {
+            background: var(--bg-pill);
+            border: 1px solid var(--border);
+            padding: 12px 16px;
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 0.95em;
+            outline: none;
+        }
+
+        .form-input:focus {
+            border-color: var(--pastel-green);
+        }
+
+        #plantResult {
+            margin-top: 20px;
+            background: var(--pastel-green-dark);
+            border: 1px solid rgba(130, 196, 150, 0.4);
+            border-radius: 16px;
+            padding: 18px;
+        }
+
+        #plantName { color: var(--pastel-green); font-size: 1.2em; font-weight: 700; }
+        #plantScore { color: var(--text-secondary); font-size: 0.85em; margin-top: 4px; }
+
+        footer {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.8em;
+            margin-top: 25px;
+        }
+
+        @media (max-width: 900px) {
+            .dashboard-window { grid-template-columns: 1fr; }
+            sidebar { border-right: none; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
+            .cards-grid { grid-template-columns: 1fr; }
+            .ai-grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>☁️ Monitor de Planta Cloud (24/7)</h1>
-            <p>Datos en tiempo real vía Firebase Realtime Database</p>
-        </header>
 
-        <div class="grid">
-            <div class="card sensor-card">
-                <div class="sensor-icon">🌿</div>
-                <div class="sensor-label">Humedad del Suelo</div>
-                <div>
-                    <span class="sensor-value" id="humidity">--</span>
-                    <span class="sensor-unit">%</span>
+    <div class="dashboard-window">
+        <!-- Sidebar Navigation Interactivo -->
+        <sidebar>
+            <div>
+                <div class="brand">
+                    <div class="brand-icon">🌿</div>
+                    <span>BioCloud</span>
                 </div>
-                <p id="soilStatus" style="margin-top: 10px; font-weight: 600; color: var(--text-muted);">Conectando con la nube...</p>
+                <ul class="nav-list">
+                    <li class="nav-item active" onclick="cambiarPestaña('dashboard', this)">📊 Panel General</li>
+                    <li class="nav-item" onclick="cambiarPestaña('camera', this)">📷 Reconocimiento</li>
+                    <li class="nav-item" onclick="cambiarPestaña('settings', this)">⚙️ Configuración</li>
+                </ul>
             </div>
-
-            <div class="card sensor-card" style="border-left-color: var(--secondary);">
-                <div class="sensor-icon" id="batteryIcon">🔋</div>
-                <div class="sensor-label">Fuente de Energía</div>
-                <div class="sensor-value" id="batteryStatus" style="font-size: 1.6em; padding-top: 15px; font-weight: 700;">Cargando...</div>
-                <div class="sensor-unit" style="margin-top: 10px;">Estado ESP8266</div>
+            <div style="font-size: 0.8em; color: var(--text-secondary);">
+                ESP8266 Online
             </div>
+        </sidebar>
 
-            <div class="card device-card">
-                <h3>📱 Información de Red</h3>
-                <div class="status-item">
-                    <span class="status-label">Dirección IP:</span>
-                    <span class="status-value" id="deviceIP">--</span>
+        <!-- Main Content Area -->
+        <main>
+            <header>
+                <div class="header-title">
+                    <h1 id="tabTitle">Hola, Planta Monitor 👋</h1>
+                    <p id="tabSubtitle">Sincronización en tiempo real vía Firebase Cloud Database</p>
                 </div>
-                <div class="status-item">
-                    <span class="status-label">SSID Conectado:</span>
-                    <span class="status-value" id="deviceSSID">--</span>
+                <div class="status-pill">
+                    <div class="status-dot-active"></div>
+                    <span id="statusCloudText">Sincronizado</span>
                 </div>
-                <div class="status-item">
-                    <span class="status-label">Señal WiFi:</span>
-                    <span class="status-value" id="deviceSignal">-- dBm</span>
-                </div>
-            </div>
-        </div>
+            </header>
 
-        <!-- ================= MÓDULO RECONOCIMIENTO DE PLANTA ================= -->
-        <div class="card" style="margin-top: 30px; border-left: 5px solid #0284c7;">
-            <h2>📸 Identificador de Planta por Cámara / Imagen</h2>
-            <p style="color: var(--text-muted); margin-bottom: 15px;">
-                Usá la cámara de tu notebook o subí una imagen para detectar qué planta es.
-            </p>
-
-            <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; align-items: flex-start;">
-                <!-- Visor de la Cámara -->
-                <div style="text-align: center; flex: 1; min-width: 280px;">
-                    <video id="webcam" autoplay playsinline style="width: 100%; max-width: 320px; height: 240px; border-radius: 12px; border: 2px solid var(--border); background: #000; object-fit: cover;"></video>
-                    <canvas id="canvas" style="display: none;"></canvas>
-                    <div style="margin-top: 10px;">
-                        <button type="button" onclick="tomarFotoYDetectar()" style="padding: 10px 15px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">
-                            📷 Capturar desde Cámara
-                        </button>
+            <!-- PESTAÑA 1: DASHBOARD GENERAL -->
+            <div id="tab-dashboard" class="tab-content active-tab">
+                <div class="cards-grid">
+                    <div class="card">
+                        <div class="card-label">Humedad del Suelo</div>
+                        <div class="card-value"><span id="humidity">--</span>%</div>
+                        <div class="card-sub" id="soilStatus">Conectando...</div>
                     </div>
-                </div>
 
-                <!-- Opción de Probar con Imagen local -->
-                <div style="text-align: center; flex: 1; min-width: 280px; border-left: 1px solid var(--border); padding-left: 20px;">
-                    <h3>O probá con un archivo:</h3>
-                    <br>
-                    <input type="file" id="imageInput" accept="image/*" style="display: none;" onchange="procesarImagenLocal(event)">
-                    <button type="button" onclick="document.getElementById('imageInput').click()" style="padding: 10px 15px; background: #0284c7; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">
-                        📁 Subir Imagen desde PC
-                    </button>
-                    <div style="margin-top: 15px;">
-                        <img id="previewImage" style="max-width: 200px; max-height: 180px; display: none; border-radius: 8px; margin: 0 auto; border: 1px solid var(--border);">
+                    <div class="card">
+                        <div class="card-label">Fuente de Energía</div>
+                        <div class="card-value" style="font-size: 2em; padding-top: 10px;" id="batteryStatus">Cargando...</div>
+                        <div class="card-sub">Estado Microcontrolador</div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-label">Señal WiFi / Red</div>
+                        <div class="card-value" style="font-size: 2em; padding-top: 10px;" id="deviceSignal">-- dBm</div>
+                        <div class="card-sub" id="deviceSSID">Red: --</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Resultado del Análisis -->
-            <div id="plantResult" style="margin-top: 20px; padding: 15px; background: var(--light); border-radius: 8px; display: none;">
-                <h3 id="plantName" style="color: var(--primary);">--</h3>
-                <p id="plantScore" style="color: var(--text-muted); font-size: 0.9em;"></p>
-                <p id="plantDetails" style="margin-top: 8px;"></p>
-            </div>
-        </div>
+            <!-- PESTAÑA 2: RECONOCIMIENTO BOTÁNICO -->
+            <div id="tab-camera" class="tab-content">
+                <div class="ai-section">
+                    <h2>📸 Identificador Inteligente de Especie</h2>
+                    <p style="color: var(--text-secondary); font-size: 0.9em; margin-top: 5px;">Capturá una imagen en vivo o cargá un archivo local.</p>
 
-        <div class="chart-section" style="margin-top: 30px;">
-            <h2>📊 Estado del Enlace IoT</h2>
-            <br>
-            <div class="status-indicator disconnected" id="connectionStatus2">
-                <div class="status-dot"></div>
-                <span class="status-text" id="statusCloudText">Buscando Dispositivo...</span>
-            </div>
-        </div>
+                    <div class="ai-grid">
+                        <div class="camera-box">
+                            <video id="webcam" autoplay playsinline></video>
+                            <canvas id="canvas" style="display: none;"></canvas>
+                            <button class="btn-pastel" type="button" onclick="tomarFotoYDetectar()">📷 Capturar Fotografía</button>
+                        </div>
 
-        <footer>
-            <p>✨ Dashboard IoT en la Nube | Última Sincronización: <span id="lastUpdate">--</span></p>
-        </footer>
+                        <div class="file-box">
+                            <p style="color: var(--text-secondary); margin-bottom: 15px; font-size: 0.9em;">Subir foto guardada:</p>
+                            <input type="file" id="imageInput" accept="image/*" style="display: none;" onchange="procesarImagenLocal(event)">
+                            <button class="btn-secondary" type="button" onclick="document.getElementById('imageInput').click()">📁 Elegir Archivo Local</button>
+                            <img id="previewImage" style="max-width: 140px; max-height: 110px; display: none; border-radius: 10px; margin-top: 15px; border: 1px solid var(--border);">
+                        </div>
+                    </div>
+
+                    <div id="plantResult" style="display: none;">
+                        <h3 id="plantName">--</h3>
+                        <p id="plantScore"></p>
+                        <p id="plantDetails" style="margin-top: 6px; font-size: 0.85em; color: var(--text-primary);"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PESTAÑA 3: CONFIGURACIÓN -->
+            <div id="tab-settings" class="tab-content">
+                <div class="config-box">
+                    <h2>⚙️ Ajustes del Sistema IoT</h2>
+                    
+                    <div class="form-group">
+                        <label>Umbral de Suelo Seco (Alerta crítica %)</label>
+                        <input type="number" class="form-input" id="cfgDryLimit" value="30">
+                    </div>
+
+                    <div class="form-group">
+                        <label>API Key de Plant.id / Kindwise</label>
+                        <input type="text" class="form-input" id="cfgApiKey" value="r6MGhn4aM8v9qvQSf9VIJ5wqAyjoALmuOjmOF6GWRNjQYEtQq8">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Intervalo de refresco visual (segundos)</label>
+                        <input type="number" class="form-input" value="5">
+                    </div>
+
+                    <button class="btn-pastel" style="width: fit-content;" onclick="guardarAjustes()">💾 Guardar Configuración</button>
+                </div>
+            </div>
+
+            <footer>
+                ✨ BioCloud IoT Dashboard | Última sincro: <span id="lastUpdate">--</span>
+            </footer>
+        </main>
     </div>
 
     <script>
+        // NAVEGACIÓN ENTRE PESTAÑAS
+        function cambiarPestaña(tabName, element) {
+            // Ocultar todas las pestañas
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active-tab'));
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+
+            // Mostrar la seleccionada
+            document.getElementById(`tab-${tabName}`).classList.add('active-tab');
+            element.classList.add('active');
+
+            // Cambiar títulos dinámicamente
+            const titleEl = document.getElementById('tabTitle');
+            const subTitleEl = document.getElementById('tabSubtitle');
+
+            if (tabName === 'dashboard') {
+                titleEl.textContent = "Hola, Planta Monitor 👋";
+                subTitleEl.textContent = "Sincronización en tiempo real vía Firebase Cloud Database";
+            } else if (tabName === 'camera') {
+                titleEl.textContent = "Reconocimiento Botánico 🌿";
+                subTitleEl.textContent = "Identificación de especies asistida por IA";
+                initWebcam(); // Activar cámara al entrar a la pestaña
+            } else if (tabName === 'settings') {
+                titleEl.textContent = "Configuración del Sistema ⚙️";
+                subTitleEl.textContent = "Personalizá los parámetros de tu monitor IoT";
+            }
+        }
+
+        function guardarAjustes() {
+            alert("¡Ajustes guardados correctamente!");
+        }
+
         // CONFIGURACIÓN DE FIREBASE
         const firebaseConfig = {
             databaseURL: "https://planta-iot-43aeb-default-rtdb.firebaseio.com/" 
@@ -158,87 +478,68 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // ESCUCHA EN TIEMPO REAL A LA CARPETA /planta
         database.ref('/planta').on('value', (snapshot) => {
             const data = snapshot.val();
-            console.log("Datos recibidos de Firebase:", data);
             if (data) {
                 updateUI(data);
             }
-        }, (error) => {
-            console.error("Error al leer de Firebase:", error);
         });
 
         function updateUI(data) {
-            // Humedad
             if (data.humidity !== undefined) {
                 const hum = Number(data.humidity);
                 document.getElementById('humidity').textContent = hum.toFixed(1);
                 
+                const dryLimit = Number(document.getElementById('cfgDryLimit').value) || 30;
                 const statusLabel = document.getElementById('soilStatus');
-                if (hum < 30) {
-                    statusLabel.textContent = "🚨 ¡Seco! Necesita agua urgente.";
+                
+                if (hum < dryLimit) {
+                    statusLabel.textContent = "🚨 Necesita Riego";
                     statusLabel.style.color = "var(--danger)";
                 } else if (hum <= 70) {
-                    statusLabel.textContent = "👍 Humedad Óptima";
-                    statusLabel.style.color = "var(--primary-light)";
+                    statusLabel.textContent = "👍 Nivel Óptimo";
+                    statusLabel.style.color = "var(--pastel-green)";
                 } else {
-                    statusLabel.textContent = "🌊 Suelo muy húmedo / Regado";
-                    statusLabel.style.color = "#0284c7";
+                    statusLabel.textContent = "🌊 Suelo Muy Húmedo";
+                    statusLabel.style.color = "#38bdf8";
                 }
             }
             
-            // Estado Batería / Alimentación
             if (data.battery) {
-                const batteryStatusEl = document.getElementById('batteryStatus');
-                const batteryIconEl = document.getElementById('batteryIcon');
-                batteryStatusEl.textContent = data.battery;
-                if (data.battery.includes("⚡")) {
-                    batteryIconEl.textContent = "⚡";
-                    batteryStatusEl.style.color = "var(--secondary)";
-                } else {
-                    batteryIconEl.textContent = "🔋";
-                    batteryStatusEl.style.color = "var(--text)";
-                }
+                document.getElementById('batteryStatus').textContent = data.battery;
             }
 
-            // Datos de Red
-            document.getElementById('deviceIP').textContent = data.ip || '--';
-            document.getElementById('deviceSSID').textContent = data.ssid || '--';
+            if (data.ssid) {
+                document.getElementById('deviceSSID').textContent = `SSID: ${data.ssid}`;
+            }
             if (data.signal !== undefined) {
                 document.getElementById('deviceSignal').textContent = data.signal + ' dBm';
             }
 
-            // Actualizar indicador de estado en línea
-            const statusIndicator = document.getElementById('connectionStatus2');
-            statusIndicator.className = 'status-indicator connected';
-            document.getElementById('statusCloudText').textContent = "Planta en Línea (Conectada)";
-
+            document.getElementById('statusCloudText').textContent = "En Línea";
             document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('es-ES');
         }
 
-        // ================= LÓGICA RECONOCIMIENTO BOTÁNICO (PLANT.ID / KINDWISE) =================
-        const PLANT_ID_API_KEY = "r6MGhn4aM8v9qvQSf9VIJ5wqAyjoALmuOjmOF6GWRNjQYEtQq8"; 
+        // RECONOCIMIENTO BOTÁNICO
+        let webcamStream = null;
 
-        // 1. Inicializar Cámara Web
         async function initWebcam() {
+            if (webcamStream) return; // Evitar inicializar dos veces
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                document.getElementById('webcam').srcObject = stream;
+                webcamStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                document.getElementById('webcam').srcObject = webcamStream;
             } catch (err) {
                 console.warn("No se pudo acceder a la cámara web:", err);
             }
         }
-        window.addEventListener('load', initWebcam);
 
-        // 2. Capturar foto desde la Cámara
         function tomarFotoYDetectar() {
             const video = document.getElementById('webcam');
             const canvas = document.getElementById('canvas');
             const imgPreview = document.getElementById('previewImage');
 
             if (!video.srcObject) {
-                alert("Permití el acceso a la cámara o probá subiendo una imagen desde la PC.");
+                alert("Permití el acceso a la cámara o subí una foto local.");
                 return;
             }
 
@@ -256,7 +557,6 @@
             }, 'image/jpeg');
         }
 
-        // 3. Subir imagen local desde PC
         function procesarImagenLocal(event) {
             const file = event.target.files[0];
             if (file) {
@@ -268,13 +568,14 @@
             }
         }
 
-        // 4. Enviar a la API de Plant.id
         async function enviarAPlantNet(imageBlob) {
             const resultDiv = document.getElementById('plantResult');
             resultDiv.style.display = 'block';
-            document.getElementById('plantName').textContent = "🔍 Analizando planta con Plant.id...";
+            document.getElementById('plantName').textContent = "🔍 Identificando especie...";
             document.getElementById('plantScore').textContent = "";
             document.getElementById('plantDetails').textContent = "";
+
+            const apiKey = document.getElementById('cfgApiKey').value.trim();
 
             const reader = new FileReader();
             reader.readAsDataURL(imageBlob);
@@ -292,34 +593,29 @@
                     const response = await fetch('https://plant.id/api/v3/identification', {
                         method: 'POST',
                         headers: {
-                            'Api-Key': PLANT_ID_API_KEY.trim(),
+                            'Api-Key': apiKey,
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(payload)
                     });
 
-                    if (!response.ok) {
-                        throw new Error(`HTTP_${response.status}`);
-                    }
+                    if (!response.ok) throw new Error(`HTTP_${response.status}`);
 
                     const data = await response.json();
 
                     if (data.result && data.result.classification && data.result.classification.suggestions.length > 0) {
                         const topResult = data.result.classification.suggestions[0];
-                        const nombrePlanta = topResult.name;
-                        const probabilidad = (topResult.probability * 100).toFixed(1);
-
-                        document.getElementById('plantName').textContent = `🌱 ${nombrePlanta}`;
-                        document.getElementById('plantScore').textContent = `Certeza de identificación: ${probabilidad}%`;
-                        document.getElementById('plantDetails').textContent = "Identificación exitosa desde la web.";
+                        document.getElementById('plantName').textContent = `🌱 ${topResult.name}`;
+                        document.getElementById('plantScore').textContent = `Confianza: ${(topResult.probability * 100).toFixed(1)}%`;
+                        document.getElementById('plantDetails').textContent = "Especie detectada correctamente.";
                     } else {
                         document.getElementById('plantName').textContent = "⚠️ No se pudo identificar la planta";
-                        document.getElementById('plantScore').textContent = "Intentá enfocando mejor la hoja o flor.";
+                        document.getElementById('plantScore').textContent = "Probá enfocando mejor la foto.";
                     }
                 } catch (error) {
                     console.error("Error Plant.id:", error);
-                    document.getElementById('plantName').textContent = "❌ Error al analizar la imagen";
-                    document.getElementById('plantScore').textContent = "Verificá la consola o que la API Key sea válida.";
+                    document.getElementById('plantName').textContent = "❌ Error en el análisis";
+                    document.getElementById('plantScore').textContent = "Revisá tu API Key o conexión.";
                 }
             };
         }
