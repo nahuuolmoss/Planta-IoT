@@ -284,7 +284,8 @@
         
             // Endpoint con proyecto 'all' explícito y parámetros de lenguaje en español
             const apiKeyLimpia = PLANTNET_API_KEY.trim();
-            const url = `https://my-api.plantnet.org/v2/identify/all?api-key=${apiKeyLimpia}&lang=es`;
+            const targetUrl = `https://my-api.plantnet.org/v2/identify/all?api-key=${apiKeyLimpia}&lang=es`;
+            const url = `https://corsproxy.io/?` + encodeURIComponent(targetUrl);
         
             try {
                 const response = await fetch(url, {
