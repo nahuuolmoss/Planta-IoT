@@ -269,55 +269,61 @@
             }
         }
 
-        // 4. Enviar Imagen a la API de Pl@ntNet
+        // 4. Enviar Imagen a la API de Pl@ntNet (Versión Ajustada para GitHub Pages)
         async function enviarAPlantNet(imageBlob) {
             const resultDiv = document.getElementById('plantResult');
             resultDiv.style.display = 'block';
             document.getElementById('plantName').textContent = "🔍 Analizando planta...";
             document.getElementById('plantScore').textContent = "";
             document.getElementById('plantDetails').textContent = "";
-
+        
             const formData = new FormData();
-            formData.append('organs', 'auto'); // 'auto' para mejor detección
+            // Pl@ntNet exige mandar el órgano exacto asociado a la foto
             formData.append('images', imageBlob);
-
-            // Enviar API Key por Header o URL limpia
-            const url = `https://my-api.plantnet.org/v2/identify/all?api-key=${encodeURIComponent(PLANTNET_API_KEY.trim())}`;
-
+            formData.append('organs', 'auto'); 
+        
+            // Endpoint con proyecto 'all' explícito y parámetros de lenguaje en español
+            const apiKeyLimpia = PLANTNET_API_KEY.trim();
+            const url = `https://my-api.plantnet.org/v2/identify/all?api-key=${apiKeyLimpia}&lang=es`;
+        
             try {
                 const response = await fetch(url, {
                     method: 'POST',
                     body: formData
                 });
-
-                if (response.status === 403) {
-                    throw new Error("403_FORBIDDEN");
+        
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    console.error("Detalle de respuesta de la API:", response.status, errorData);
+                    throw new Error(`HTTP_${response.status}`);
                 }
-
+        
                 const data = await response.json();
-
+        
                 if (data.results && data.results.length > 0) {
                     const topResult = data.results[0];
                     const nombreCientifico = topResult.species.scientificNameWithoutAuthor;
-                    const nombresComunes = topResult.species.commonNames ? topResult.species.commonNames.join(', ') : 'Sin nombre común registrado';
+                    const nombresComunes = (topResult.species.commonNames && topResult.species.commonNames.length > 0) 
+                        ? topResult.species.commonNames.join(', ') 
+                        : nombreCientifico;
                     const certeza = (topResult.score * 100).toFixed(1);
-
+        
                     document.getElementById('plantName').textContent = `🌱 ${nombresComunes}`;
                     document.getElementById('plantScore').textContent = `Nombre científico: ${nombreCientifico} | Certeza: ${certeza}%`;
                     document.getElementById('plantDetails').innerHTML = `<strong>Familia:</strong> ${topResult.species.family.scientificNameWithoutAuthor}`;
                 } else {
                     document.getElementById('plantName').textContent = "⚠️ No se pudo identificar la planta";
-                    document.getElementById('plantScore').textContent = "Intentá con una imagen más clara o mejor enfocada.";
+                    document.getElementById('plantScore').textContent = "Intentá con una imagen donde la hoja o flor se vea más clara.";
                 }
             } catch (error) {
                 console.error("Error al consultar la API:", error);
                 
-                if (error.message === "403_FORBIDDEN") {
-                    document.getElementById('plantName').textContent = "❌ Acceso Denegado (Error 403)";
-                    document.getElementById('plantScore').textContent = "Asegurate de activar tu API Key desde el mail de confirmación de Pl@ntNet o probá abrir la web con Live Server.";
+                if (error.message.includes("403")) {
+                    document.getElementById('plantName').textContent = "❌ Error 403 (Clave / Proyecto)";
+                    document.getElementById('plantScore').textContent = "Revisá en la consola (F12) qué mensaje devuelve la API de Pl@ntNet.";
                 } else {
-                    document.getElementById('plantName').textContent = "❌ Error en la conexión";
-                    document.getElementById('plantScore').textContent = "Verificá tu conexión a internet o la consola F12.";
+                    document.getElementById('plantName').textContent = "❌ Error al procesar la imagen";
+                    document.getElementById('plantScore').textContent = "Verificá la consola F12 para más detalles.";
                 }
             }
         }
