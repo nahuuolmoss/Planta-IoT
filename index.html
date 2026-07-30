@@ -467,7 +467,22 @@
         }
 
         function guardarAjustes() {
-            alert("¡Ajustes guardados correctamente!");
+            const nuevoIntervaloSegundos = document.getElementById('cfgIntervalo').value;
+            const nuevoUmbralHumedad = document.getElementById('cfgDryLimit').value;
+        
+            // Convertimos a milisegundos para facilitarle el trabajo a la ESP
+            const intervaloMS = Number(nuevoIntervaloSegundos) * 1000;
+        
+            // Guardamos la configuración directamente en Firebase
+            database.ref('/planta/config').set({
+                intervalo_ms: intervaloMS,
+                umbral_seco: Number(nuevoUmbralHumedad)
+            }).then(() => {
+                alert("¡Configuración enviada a la ESP8266 correctamente!");
+            }).catch((error) => {
+                console.error("Error al guardar:", error);
+                alert("Error al guardar en Firebase.");
+            });
         }
 
         // CONFIGURACIÓN DE FIREBASE
