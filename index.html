@@ -218,116 +218,63 @@
         }
 
         // ================= LÓGICA RECONOCIMIENTO BOTÁNICO =================
-        const PLANTNET_API_KEY = "2b10G43iGp8H4K93BsKuMLFZme"; 
+        // Constante para tu clave de Plant.id
+        const PLANT_ID_API_KEY = "r6MGhn4aM8v9qvQSf9VIJ5wqAyjoALmuOjmOF6GWRNjQYEtQq8"; 
 
-        // 1. Inicializar Cámara Web al cargar
-        async function initWebcam() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                document.getElementById('webcam').srcObject = stream;
-            } catch (err) {
-                console.warn("No se pudo acceder a la cámara web:", err);
-            }
-        }
-        window.addEventListener('load', initWebcam);
-
-        // 2. Capturar foto del Video de la Cámara
-        function tomarFotoYDetectar() {
-            const video = document.getElementById('webcam');
-            const canvas = document.getElementById('canvas');
-            const imgPreview = document.getElementById('previewImage');
-
-            if (!video.srcObject) {
-                alert("Por favor permite el acceso a la cámara o usa la opción de 'Subir Imagen desde PC'.");
-                return;
-            }
-
-            canvas.width = video.videoWidth || 640;
-            canvas.height = video.videoHeight || 480;
-            
-            const context = canvas.getContext('2d');
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-            // Mostrar vista previa de la captura
-            imgPreview.src = canvas.toDataURL('image/jpeg');
-            imgPreview.style.display = 'block';
-
-            canvas.toBlob((blob) => {
-                if(blob) enviarAPlantNet(blob);
-            }, 'image/jpeg');
-        }
-
-        // 3. Procesar Imagen Subida desde Archivo Local
-        function procesarImagenLocal(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const imgPreview = document.getElementById('previewImage');
-                imgPreview.src = URL.createObjectURL(file);
-                imgPreview.style.display = 'block';
-                
-                enviarAPlantNet(file);
-            }
-        }
-
-        // 4. Enviar Imagen a la API de Pl@ntNet
         async function enviarAPlantNet(imageBlob) {
             const resultDiv = document.getElementById('plantResult');
             resultDiv.style.display = 'block';
-            document.getElementById('plantName').textContent = "🔍 Analizando planta...";
+            document.getElementById('plantName').textContent = "🔍 Analizando planta con Plant.id...";
             document.getElementById('plantScore').textContent = "";
             document.getElementById('plantDetails').textContent = "";
-        
-            const formData = new FormData();
-            // Requisito de la API: archivo en 'images' y tipo en 'organs'
-            formData.append('images', imageBlob, 'planta.jpg');
-            formData.append('organs', 'leaf'); 
-        
-            const apiKeyLimpia = PLANTNET_API_KEY.trim();
-            // Endpoint directo a Pl@ntNet
-            const url = `https://my-api.plantnet.org/v2/identify/all?api-key=${apiKeyLimpia}&lang=es`;
-        
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    body: formData
-                });
-        
-                if (response.status === 403) {
-                    throw new Error("403_FORBIDDEN");
+
+            // Convertir el Blob de la imagen a Base64 (requerido por Plant.id)
+            const reader = new FileReader();
+            reader.readAsDataURL(imageBlob);
+            reader.onloadend = async function() {
+                const base64Image = reader.result;
+
+                const payload = {
+                    images: [base64Image],
+                    latitude: 49.207,
+                    longitude: 16.608,
+                    similar_images: true
+                };
+
+                try {
+                    const response = await fetch('https://plant.id/api/v3/identification', {
+                        method: 'POST',
+                        headers: {
+                            'Api-Key': PLANT_ID_API_KEY.trim(),
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP_${response.status}`);
+                    }
+
+                    const data = await response.json();
+
+                    if (data.result && data.result.classification && data.result.classification.suggestions.length > 0) {
+                        const topResult = data.result.classification.suggestions[0];
+                        const nombrePlanta = topResult.name;
+                        const probabilidad = (topResult.probability * 100).toFixed(1);
+
+                        document.getElementById('plantName').textContent = `🌱 ${nombrePlanta}`;
+                        document.getElementById('plantScore').textContent = `Certeza de identificación: ${probabilidad}%`;
+                        document.getElementById('plantDetails').textContent = "Identificación exitosa desde la web.";
+                    } else {
+                        document.getElementById('plantName').textContent = "⚠️ No se pudo identificar la planta";
+                        document.getElementById('plantScore').textContent = "Intentá enfocando mejor la hoja o flor.";
+                    }
+                } catch (error) {
+                    console.error("Error Plant.id:", error);
+                    document.getElementById('plantName').textContent = "❌ Error al analizar la imagen";
+                    document.getElementById('plantScore').textContent = "Verificá que la API Key de Plant.id sea correcta.";
                 }
-        
-                if (!response.ok) {
-                    throw new Error(`HTTP_ERROR_${response.status}`);
-                }
-        
-                const data = await response.json();
-        
-                if (data.results && data.results.length > 0) {
-                    const topResult = data.results[0];
-                    const nombreCientifico = topResult.species.scientificNameWithoutAuthor;
-                    const nombresComunes = (topResult.species.commonNames && topResult.species.commonNames.length > 0) 
-                        ? topResult.species.commonNames.join(', ') 
-                        : nombreCientifico;
-                    const certeza = (topResult.score * 100).toFixed(1);
-        
-                    document.getElementById('plantName').textContent = `🌱 ${nombresComunes}`;
-                    document.getElementById('plantScore').textContent = `Nombre científico: ${nombreCientifico} | Certeza: ${certeza}%`;
-                    document.getElementById('plantDetails').innerHTML = `<strong>Familia:</strong> ${topResult.species.family.scientificNameWithoutAuthor}`;
-                } else {
-                    document.getElementById('plantName').textContent = "⚠️ No se pudo identificar la planta";
-                    document.getElementById('plantScore').textContent = "Intentá con una imagen más clara de la hoja.";
-                }
-            } catch (error) {
-                console.error("Error al consultar la API:", error);
-                
-                if (error.message === "403_FORBIDDEN") {
-                    document.getElementById('plantName').textContent = "❌ Error 403 (Pl@ntNet)";
-                    document.getElementById('plantScore').textContent = "Tu cuenta o API Key de Pl@ntNet fue bloqueada temporalmente o no tiene permisos de origen.";
-                } else {
-                    document.getElementById('plantName').textContent = "❌ Error en la solicitud";
-                    document.getElementById('plantScore').textContent = "Verificá la consola F12 para ver la respuesta detallada.";
-                }
-            }
+            };
         }
     </script>
 </body>
