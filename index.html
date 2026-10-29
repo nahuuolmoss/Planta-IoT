@@ -6,19 +6,17 @@
     <title>BioCloud - Monitor IoT Botánico</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    <!-- Tipografías limpias y modernas inspiradas en la imagen -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
         
         :root {
-            /* Paleta basada en la imagen de referencia */
-            --accent-green: #00d26a; /* Verde brillante del botón y menú */
+            --accent-green: #00d26a; 
             --accent-hover: #00e676;
             
-            /* Fondos oscuros translúcidos */
-            --bg-glass-main: rgba(10, 15, 12, 0.65);
-            --bg-glass-card: rgba(0, 0, 0, 0.45);
+            /* Opacidad aumentada para mayor legibilidad y solidez */
+            --bg-glass-main: rgba(10, 15, 12, 0.85); 
+            --bg-glass-card: rgba(0, 0, 0, 0.65);
             --bg-glass-input: rgba(255, 255, 255, 0.05);
             
             --border-glass: rgba(255, 255, 255, 0.12);
@@ -30,8 +28,8 @@
         }
 
         body {
-            /* Imagen de bosque oscuro con un overlay para legibilidad */
-            background-image: linear-gradient(rgba(15, 22, 18, 0.8), rgba(15, 22, 18, 0.85)), url('https://images.unsplash.com/photo-1448375240586-882707db888b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+            /* Overlay oscurecido para un contraste perfecto */
+            background-image: linear-gradient(rgba(10, 15, 12, 0.85), rgba(10, 15, 12, 0.90)), url('https://images.unsplash.com/photo-1448375240586-882707db888b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
@@ -43,11 +41,8 @@
             padding: 30px 20px;
         }
 
-        h1, h2, h3, .brand span {
-            font-family: 'Montserrat', sans-serif;
-        }
+        h1, h2, h3, .brand span { font-family: 'Montserrat', sans-serif; }
 
-        /* Contenedor Principal (Panel flotante) */
         .dashboard-window {
             background: var(--bg-glass-main);
             backdrop-filter: blur(16px);
@@ -57,7 +52,7 @@
             width: 100%;
             max-width: 1250px;
             padding: 30px;
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8);
             display: grid;
             grid-template-columns: 240px 1fr;
             gap: 35px;
@@ -140,12 +135,11 @@
             letter-spacing: 2px;
         }
 
-        /* Estilo del bloque verde brillante de la esquina en la imagen */
         .status-pill {
             background: var(--accent-green);
             color: #000;
             padding: 10px 20px;
-            border-radius: 4px; /* Más cuadrado para imitar tu referencia */
+            border-radius: 4px; 
             display: flex;
             align-items: center;
             gap: 10px;
@@ -164,7 +158,6 @@
             box-shadow: 0 0 8px #fff;
         }
 
-        /* Control de Pestañas */
         .tab-content { display: none; opacity: 0; transition: opacity 0.4s ease; }
         .tab-content.active-tab { display: block; opacity: 1; }
 
@@ -215,7 +208,6 @@
             color: var(--text-muted);
         }
 
-        /* Sección de IA y Cámara */
         .ai-section {
             background: var(--bg-glass-card);
             border: 1px solid var(--border-glass);
@@ -300,48 +292,6 @@
             background: rgba(0, 210, 106, 0.1);
         }
 
-        /* Formulario de Configuración */
-        .config-box {
-            background: var(--bg-glass-card);
-            border: 1px solid var(--border-glass);
-            border-radius: 16px;
-            padding: 35px;
-            display: flex;
-            flex-direction: column;
-            gap: 25px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .form-group label {
-            font-size: 0.85em;
-            color: var(--text-muted);
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .form-input {
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid var(--border-glass);
-            padding: 15px 20px;
-            border-radius: 6px;
-            color: var(--text-main);
-            font-family: 'Inter', sans-serif;
-            font-size: 1em;
-            outline: none;
-            transition: all 0.3s;
-        }
-
-        .form-input:focus {
-            border-color: var(--accent-green);
-            background: rgba(0, 0, 0, 0.6);
-        }
-
         #plantResult {
             margin-top: 25px;
             background: rgba(0, 210, 106, 0.05);
@@ -351,7 +301,7 @@
         }
 
         #plantName { color: var(--accent-green); font-size: 1.5em; font-weight: 700; margin-bottom: 5px; }
-        #plantScore { color: var(--text-muted); font-size: 0.9em; }
+        #plantScore { color: var(--text-muted); font-size: 0.9em; margin-bottom: 10px; }
 
         footer {
             text-align: center;
@@ -385,10 +335,7 @@
                         📊 Panel General
                     </li>
                     <li class="nav-item" onclick="cambiarPestaña('camera', this)">
-                        🔍 Identificador
-                    </li>
-                    <li class="nav-item" onclick="cambiarPestaña('settings', this)">
-                        ⚙️ Ajustes
+                        🔍 Inteligencia Botánica
                     </li>
                 </ul>
             </div>
@@ -420,30 +367,30 @@
                     </div>
 
                     <div class="card">
+                        <div class="card-label">Umbral Configurado</div>
+                        <div class="card-value" style="font-size: 2.2em; padding-top: 10px;" id="thresholdStatus"><span id="currentThreshold">30</span>%</div>
+                        <div class="card-sub" style="margin-top: 10px;">Límite de alerta (Auto)</div>
+                    </div>
+
+                    <div class="card">
                         <div class="card-label">Energía</div>
                         <div class="card-value" style="font-size: 2em; padding-top: 10px;" id="batteryStatus">Cargando</div>
                         <div class="card-sub" style="margin-top: 10px;">Estado Microcontrolador</div>
                     </div>
-
-                    <div class="card">
-                        <div class="card-label">Conectividad</div>
-                        <div class="card-value" style="font-size: 2em; padding-top: 10px;" id="deviceSignal">-- dBm</div>
-                        <div class="card-sub" id="deviceSSID">Red: --</div>
-                    </div>
                 </div>
             </div>
 
-            <!-- PESTAÑA 2: RECONOCIMIENTO BOTÁNICO -->
+            <!-- PESTAÑA 2: RECONOCIMIENTO BOTÁNICO Y AJUSTE AUTOMÁTICO -->
             <div id="tab-camera" class="tab-content">
                 <div class="ai-section">
-                    <h2 style="margin-bottom: 8px;">Reconocimiento de Especie</h2>
-                    <p style="color: var(--text-muted); font-size: 0.9em; margin-bottom: 20px;">Capturá una imagen en vivo o subí un archivo para analizar botánicamente.</p>
+                    <h2 style="margin-bottom: 8px;">Reconocimiento y Ajuste Autónomo</h2>
+                    <p style="color: var(--text-muted); font-size: 0.9em; margin-bottom: 20px;">Captura una imagen. El sistema identificará la especie y ajustará automáticamente los requerimientos de riego en el hardware.</p>
 
                     <div class="ai-grid">
                         <div class="camera-box">
                             <video id="webcam" autoplay playsinline></video>
                             <canvas id="canvas" style="display: none;"></canvas>
-                            <button class="btn-pastel" type="button" onclick="tomarFotoYDetectar()">Capturar</button>
+                            <button class="btn-pastel" type="button" onclick="tomarFotoYDetectar()">Escanear</button>
                         </div>
 
                         <div class="file-box">
@@ -457,32 +404,8 @@
                     <div id="plantResult" style="display: none;">
                         <h3 id="plantName">--</h3>
                         <p id="plantScore"></p>
-                        <p id="plantDetails" style="margin-top: 8px; font-size: 0.9em; color: var(--text-main);"></p>
+                        <p id="plantDetails" style="font-size: 0.95em; color: var(--text-main); line-height: 1.6;"></p>
                     </div>
-                </div>
-            </div>
-
-            <!-- PESTAÑA 3: CONFIGURACIÓN -->
-            <div id="tab-settings" class="tab-content">
-                <div class="config-box">
-                    <h2 style="margin-bottom: 5px;">Ajustes del Sistema</h2>
-                    
-                    <div class="form-group">
-                        <label>Umbral Crítico de Secado (%)</label>
-                        <input type="number" class="form-input" id="cfgDryLimit" value="30">
-                    </div>
-
-                    <div class="form-group">
-                        <label>API Key (Kindwise/Plant.id)</label>
-                        <input type="text" class="form-input" id="cfgApiKey" value="r6MGhn4aM8v9qvQSf9VIJ5wqAyjoALmuOjmOF6GWRNjQYEtQq8">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Intervalo de Refresco (s)</label>
-                        <input type="number" class="form-input" value="5">
-                    </div>
-
-                    <button class="btn-pastel" style="width: fit-content; margin-top: 15px;" onclick="guardarAjustes()">Guardar Cambios</button>
                 </div>
             </div>
 
@@ -493,6 +416,9 @@
     </div>
 
     <script>
+        // CONFIGURACIÓN (Oculta al usuario final)
+        const KINDWISE_API_KEY = "r6MGhn4aM8v9qvQSf9VIJ5wqAyjoALmuOjmOF6GWRNjQYEtQq8";
+        
         // NAVEGACIÓN ENTRE PESTAÑAS
         function cambiarPestaña(tabName, element) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active-tab'));
@@ -509,16 +435,9 @@
                 subTitleEl.textContent = "monitor en tiempo real";
             } else if (tabName === 'camera') {
                 titleEl.textContent = "IA BOTÁNICA";
-                subTitleEl.textContent = "análisis e identificación visual";
+                subTitleEl.textContent = "análisis y ajuste automático";
                 initWebcam(); 
-            } else if (tabName === 'settings') {
-                titleEl.textContent = "CONFIGURACIÓN";
-                subTitleEl.textContent = "parámetros del sistema";
             }
-        }
-
-        function guardarAjustes() {
-            alert("Configuración actualizada en el sistema.");
         }
 
         // CONFIGURACIÓN DE FIREBASE
@@ -529,23 +448,31 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
+        // Escucha en tiempo real de toda la base de datos
         database.ref('/planta').on('value', (snapshot) => {
             const data = snapshot.val();
             if (data) updateUI(data);
         });
 
         function updateUI(data) {
+            // Leer el umbral dinámico desde Firebase (o usar 30 por defecto)
+            let currentDryLimit = 30;
+            if (data.config && data.config.umbral_seco !== undefined) {
+                currentDryLimit = Number(data.config.umbral_seco);
+            }
+            
+            document.getElementById('currentThreshold').textContent = currentDryLimit;
+
             if (data.humidity !== undefined) {
                 const hum = Number(data.humidity);
                 document.getElementById('humidity').textContent = hum.toFixed(1);
                 
-                const dryLimit = Number(document.getElementById('cfgDryLimit').value) || 30;
                 const statusLabel = document.getElementById('soilStatus');
                 
-                if (hum < dryLimit) {
+                if (hum < currentDryLimit) {
                     statusLabel.innerHTML = "Estado: Crítico (Regar)";
                     statusLabel.style.color = "var(--danger)";
-                } else if (hum <= 75) {
+                } else if (hum <= (currentDryLimit + 45)) { // Rango dinámico
                     statusLabel.innerHTML = "Estado: Óptimo";
                     statusLabel.style.color = "var(--accent-green)";
                 } else {
@@ -556,13 +483,6 @@
             
             if (data.battery) {
                 document.getElementById('batteryStatus').textContent = data.battery;
-            }
-
-            if (data.ssid) {
-                document.getElementById('deviceSSID').textContent = `Red: ${data.ssid}`;
-            }
-            if (data.signal !== undefined) {
-                document.getElementById('deviceSignal').textContent = data.signal + ' dBm';
             }
 
             document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('es-ES');
@@ -616,14 +536,30 @@
             }
         }
 
+        // LÓGICA DE BASE DE DATOS BOTÁNICA Y ACTUALIZACIÓN EN LA NUBE
+        function asignarPerfilBotanico(nombreEspecie) {
+            const nameLower = nombreEspecie.toLowerCase();
+            
+            // Familias que requieren muy poca agua
+            if (nameLower.match(/cactus|succulent|aloe|echeveria|sansevieria|cactaceae|crassula|sedum|agave/)) {
+                return { tipo: "Desértica / Suculenta", umbralIdeal: 15 };
+            } 
+            // Familias tropicales que requieren mucha humedad constante
+            else if (nameLower.match(/fern|calathea|monstera|spathiphyllum|fittonia|mint|araceae|maranta|alocasia|philodendron/)) {
+                return { tipo: "Tropical / Alta Humedad", umbralIdeal: 45 };
+            } 
+            // Plantas estándar de interior/exterior
+            else {
+                return { tipo: "Estándar / Templada", umbralIdeal: 30 };
+            }
+        }
+
         async function enviarAPlantNet(imageBlob) {
             const resultDiv = document.getElementById('plantResult');
             resultDiv.style.display = 'block';
-            document.getElementById('plantName').textContent = "Analizando muestra...";
+            document.getElementById('plantName').textContent = "Consultando base de datos...";
             document.getElementById('plantScore').textContent = "";
             document.getElementById('plantDetails').textContent = "";
-
-            const apiKey = document.getElementById('cfgApiKey').value.trim();
 
             const reader = new FileReader();
             reader.readAsDataURL(imageBlob);
@@ -641,7 +577,7 @@
                     const response = await fetch('https://plant.id/api/v3/identification', {
                         method: 'POST',
                         headers: {
-                            'Api-Key': apiKey,
+                            'Api-Key': KINDWISE_API_KEY,
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(payload)
@@ -653,17 +589,32 @@
 
                     if (data.result && data.result.classification && data.result.classification.suggestions.length > 0) {
                         const topResult = data.result.classification.suggestions[0];
-                        document.getElementById('plantName').textContent = topResult.name;
-                        document.getElementById('plantScore').textContent = `Precisión: ${(topResult.probability * 100).toFixed(1)}%`;
-                        document.getElementById('plantDetails').textContent = "Especie identificada exitosamente.";
+                        const especie = topResult.name;
+                        
+                        // Determinar el umbral inteligente basado en la especie
+                        const perfil = asignarPerfilBotanico(especie);
+
+                        // Enviar el nuevo parámetro al ESP8266 vía Firebase
+                        database.ref('/planta/config').update({
+                            umbral_seco: perfil.umbralIdeal
+                        });
+
+                        document.getElementById('plantName').textContent = especie;
+                        document.getElementById('plantScore').textContent = `Precisión de IA: ${(topResult.probability * 100).toFixed(1)}%`;
+                        document.getElementById('plantDetails').innerHTML = `
+                            <strong>Perfil Botánico Detectado:</strong> ${perfil.tipo}<br>
+                            <span style="color: var(--accent-green); font-weight: 600; display: inline-block; margin-top: 5px;">
+                                ✓ Límite de alerta ajustado automáticamente a ${perfil.umbralIdeal}% en el servidor IoT.
+                            </span>
+                        `;
                     } else {
                         document.getElementById('plantName').textContent = "Desconocida";
                         document.getElementById('plantScore').textContent = "Intenta capturar mejor los detalles.";
                     }
                 } catch (error) {
                     console.error("API Error:", error);
-                    document.getElementById('plantName').textContent = "Error de Red";
-                    document.getElementById('plantScore').textContent = "Verifica tu conexión y clave API.";
+                    document.getElementById('plantName').textContent = "Error de Conexión";
+                    document.getElementById('plantScore').textContent = "Verifica tu internet o clave API.";
                 }
             };
         }
