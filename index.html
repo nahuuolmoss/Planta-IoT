@@ -454,8 +454,39 @@
             if (data) updateUI(data);
         });
 
+        // Variable global para controlar la inactividad
+        let watchdogTimer;
+
         function updateUI(data) {
-            // Leer el umbral dinámico desde Firebase (o usar 30 por defecto)
+            // --- NUEVO: SISTEMA DE DESCONEXIÓN AUTOMÁTICA ---
+            const statusIndicator = document.getElementById('statusCloudText');
+            const statusDot = document.querySelector('.status-dot-active');
+            
+            // Si se ejecuta esta función, significa que llegó data nueva: está Online
+            statusIndicator.textContent = "Online";
+            statusIndicator.style.color = "var(--text-main)";
+            statusDot.style.background = "#fff";
+            statusDot.style.boxShadow = "0 0 8px #fff";
+
+            // Reiniciamos el temporizador
+            clearTimeout(watchdogTimer);
+
+            // Si pasan 15 segundos sin que Firebase envíe datos nuevos, asumimos que se desconectó
+            watchdogTimer = setTimeout(() => {
+                statusIndicator.textContent = "Desconectado";
+                statusIndicator.style.color = "var(--danger)";
+                statusDot.style.background = "var(--danger)";
+                statusDot.style.boxShadow = "0 0 8px var(--danger)";
+                
+                // Opcional: Blanquear datos para evitar confusión
+                document.getElementById('humidity').textContent = "--";
+                document.getElementById('batteryStatus').textContent = "Sin señal";
+                document.getElementById('soilStatus').innerHTML = "Esperando conexión...";
+                document.getElementById('soilStatus').style.color = "var(--text-muted)";
+            }, 15000);
+
+            // --- LÓGICA ORIGINAL DE ACTUALIZACIÓN DE DATOS ---
+            
             let currentDryLimit = 30;
             if (data.config && data.config.umbral_seco !== undefined) {
                 currentDryLimit = Number(data.config.umbral_seco);
@@ -472,7 +503,7 @@
                 if (hum < currentDryLimit) {
                     statusLabel.innerHTML = "Estado: Crítico (Regar)";
                     statusLabel.style.color = "var(--danger)";
-                } else if (hum <= (currentDryLimit + 45)) { // Rango dinámico
+                } else if (hum <= (currentDryLimit + 45)) { 
                     statusLabel.innerHTML = "Estado: Óptimo";
                     statusLabel.style.color = "var(--accent-green)";
                 } else {
