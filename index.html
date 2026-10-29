@@ -537,19 +537,25 @@
         }
 
         // LÓGICA DE BASE DE DATOS BOTÁNICA Y ACTUALIZACIÓN EN LA NUBE
-        function asignarPerfilBotanico(nombreEspecie) {
-            const nameLower = nombreEspecie.toLowerCase();
+        function asignarPerfilBotanico(nombresCombinados) {
+            const textoBusqueda = nombresCombinados.toLowerCase();
             
-            // Familias que requieren muy poca agua
-            if (nameLower.match(/cactus|succulent|aloe|echeveria|sansevieria|cactaceae|crassula|sedum|agave/)) {
+            // 🏜️ GRUPO 1: Desérticas, Suculentas y Cactus (Umbral bajo: 15-20%)
+            // Ampliado con familias y géneros científicos comunes
+            const deserticasRegex = /cactus|succulent|aloe|echeveria|sansevieria|cactaceae|crassula|sedum|agave|euphorbia|zamioculcas|haworthia|lithops|sempervivum|aeonium|portulacaria|opuntia|mammillaria|kalanchoe|schlumbergera/i;
+
+            // 🌴 GRUPO 2: Tropicales y de Alta Humedad (Umbral alto: 45-50%)
+            // Ampliado con potus (epipremnum), ficus, helechos, peperomias, etc.
+            const tropicalesRegex = /fern|calathea|monstera|spathiphyllum|fittonia|araceae|maranta|alocasia|philodendron|epipremnum|syngonium|anthurium|ficus|begonia|asplenium|nephrolepis|croton|aglaonema|caladium|tradescantia|peperomia|dieffenbachia|chlorophytum|mint|helecho/i;
+
+            if (deserticasRegex.test(textoBusqueda)) {
                 return { tipo: "Desértica / Suculenta", umbralIdeal: 15 };
             } 
-            // Familias tropicales que requieren mucha humedad constante
-            else if (nameLower.match(/fern|calathea|monstera|spathiphyllum|fittonia|mint|araceae|maranta|alocasia|philodendron/)) {
+            else if (tropicalesRegex.test(textoBusqueda)) {
                 return { tipo: "Tropical / Alta Humedad", umbralIdeal: 45 };
             } 
-            // Plantas estándar de interior/exterior
             else {
+                // 🌿 GRUPO 3: Estándar (Umbral medio: 30%)
                 return { tipo: "Estándar / Templada", umbralIdeal: 30 };
             }
         }
@@ -589,22 +595,27 @@
 
                     if (data.result && data.result.classification && data.result.classification.suggestions.length > 0) {
                         const topResult = data.result.classification.suggestions[0];
-                        const especie = topResult.name;
+                        const especiePrincipal = topResult.name;
                         
-                        // Determinar el umbral inteligente basado en la especie
-                        const perfil = asignarPerfilBotanico(especie);
+                        // TRUCO: Juntamos las 3 sugerencias principales de la IA en un solo texto 
+                        // para tener más probabilidades de encontrar la familia de la planta
+                        const sugerenciasTop = data.result.classification.suggestions.slice(0, 3);
+                        const textoAnalisis = sugerenciasTop.map(s => s.name).join(" ");
+                        
+                        // Determinamos el umbral inteligente analizando todas las coincidencias
+                        const perfil = asignarPerfilBotanico(textoAnalisis);
 
                         // Enviar el nuevo parámetro al ESP8266 vía Firebase
                         database.ref('/planta/config').update({
                             umbral_seco: perfil.umbralIdeal
                         });
 
-                        document.getElementById('plantName').textContent = especie;
+                        document.getElementById('plantName').textContent = especiePrincipal;
                         document.getElementById('plantScore').textContent = `Precisión de IA: ${(topResult.probability * 100).toFixed(1)}%`;
                         document.getElementById('plantDetails').innerHTML = `
                             <strong>Perfil Botánico Detectado:</strong> ${perfil.tipo}<br>
                             <span style="color: var(--accent-green); font-weight: 600; display: inline-block; margin-top: 5px;">
-                                ✓ Límite de alerta ajustado automáticamente a ${perfil.umbralIdeal}% en el servidor IoT.
+                                ✓ Límite de alerta ajustado automáticamente a ${perfil.umbralIdeal}% en el hardware.
                             </span>
                         `;
                     } else {
